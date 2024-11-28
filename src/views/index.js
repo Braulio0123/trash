@@ -9,7 +9,7 @@ export default function Index() {
     const { user, logout } = useAuth();
     return (
         <>
-            <nav className="sticky top-0 w-full bg-white shadow-sm z-50 px-5">
+            <nav className="sticky top-0 w-full bg-white shadow-sm z-50">
                 <div className="container mx-auto flex items-center justify-between p-4 lg:p-0">
                     {/* Logo */}
                     <div className="flex items-center">
@@ -60,7 +60,7 @@ export default function Index() {
                             </>
                         ) : (
                             <>
-                                <p className="font-medium text-lg sm:text-xl">¡Hola {user.name}!</p>
+                                <p className="font-medium text-lg sm:text-xl">¡Bienvenido {user.name}!</p>
                                 <button
                                     onClick={logout}
                                     className="text-white font-semibold bg-secondary border-2 border-secondary py-2 px-3 rounded-lg hover:bg-white hover:border-complementary hover:text-dark_complementary transition duration-500 ease-in-out"
@@ -165,12 +165,12 @@ export default function Index() {
 
             <section id="about-us" className="px-5">
                 <div
-                    className="flex flex-col lg:flex-row items-center lg:h-1/2 justify-around mt-16 lg:mt-32 mb-16 lg:mb-32">
+                    className="flex flex-col lg:flex-row items-center lg:h-1/2 justify-around mt-16 lg:mt-32 mb-16 lg:mb-32 order-last lg:order-first">
                     <img src="https://static.wixstatic.com/media/6afd1b_6330011140ab4ffbb05d184069f148b0~mv2.jpg/v1/fill/w_980,h_818,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/6afd1b_6330011140ab4ffbb05d184069f148b0~mv2.jpg"
                          className="h-64 w-80 sm:h-[300px] sm:w-[400px] lg:h-[470px] lg:w-[600px] rounded-3xl mb-5 lg:mb-0" alt={""}/>
-                    <div className="text-center lg:text-left w-full lg:w-1/2 items-center">
+                    <div className="text-center lg:text-left w-full lg:w-1/2 items-center order-first lg:order-last">
                         <h1 className="text-4xl lg:text-6xl font-bold text-center lg:text-left">Nosotros</h1>
-                        <p className="mt-6 lg:mt-10 text-lg lg:text-2xl text-justify">
+                        <p className="mt-6 lg:mt-10 text-lg lg:text-2xl text-justify mb-5 lg:mb-0">
                         Trash surge de una idea basura, resultado de varias ideas desechables que formaron una aplicación... 
                         literalmente basura.
                         No entendemos por qué a nuestro público le encanta este contenido, si es una total basura. A pesar 

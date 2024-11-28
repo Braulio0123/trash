@@ -71,7 +71,7 @@ export default function Login() {
 
                         <div className="text-center">
                             <p className="mt-10 font-semibold text-md text-gray-500">
-                                ¿Mo tienes una cuenta?
+                                ¿No tienes una cuenta?
                             </p>
                             <Link to="/sign-up" className="font-semibold leading-6 text-secondary hover:text-complementary">
                                 Registrate 
