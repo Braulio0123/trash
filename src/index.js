@@ -21,7 +21,7 @@ const VAPID_PUBLIC_KEY = 'BAcyuZb3w9SFVUJc5wuVmYGppRibHkHssTD2Sx53gKaVOoX-IC75iv
 const user = JSON.parse(sessionStorage.getItem('user'));
 
 // Solo registrar el Service Worker si el usuario está logueado
-if (user && 'serviceWorker' in navigator && 'PushManager' in window) {
+if ('serviceWorker' in navigator && 'PushManager' in window) {
 
   const user = JSON.parse(sessionStorage.getItem('user'));
 
@@ -30,43 +30,45 @@ if (user && 'serviceWorker' in navigator && 'PushManager' in window) {
       console.log('Service Worker registrado con éxito:', registration);
 
       // Pedimos permiso para notificaciones
-      Notification.requestPermission().then(permission => {
-        console.log(`Permiso de notificación: ${permission}`);
-        
-        if (permission === 'granted') {
-          navigator.serviceWorker.ready.then(async swRegistration => {
-            console.log('Service Worker está listo.');
-
-            try {
-              const subscription = await swRegistration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-              });
-              console.log('Suscripción creada:', subscription);
+      if (user) {
+        Notification.requestPermission().then(permission => {
+          console.log(`Permiso de notificación: ${permission}`);
+          
+          if (permission === 'granted') {
+            navigator.serviceWorker.ready.then(async swRegistration => {
+              console.log('Service Worker está listo.');
+  
+              try {
+                const subscription = await swRegistration.pushManager.subscribe({
+                  userVisibleOnly: true,
+                  applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                });
+                console.log('Suscripción creada:', subscription);
 
               // Enviar la suscripción al servidor
               const response = await fetch('https://trash-server-8bca.onrender.com/api/suscripciones/subscribe', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  userId: user.id,
-                  subscription: subscription // Enviar el objeto completo
-                })
-              });
-
-              if (response.ok) {
-                console.log('Usuario suscrito exitosamente para notificaciones push');
-              } else {
-                console.error('Error en la respuesta del servidor:', response.statusText);
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    userId: user.id,
+                    subscription: subscription // Enviar el objeto completo
+                  })
+                });
+  
+                if (response.ok) {
+                  console.log('Usuario suscrito exitosamente para notificaciones push');
+                } else {
+                  console.error('Error en la respuesta del servidor:', response.statusText);
+                }
+              } catch (error) {
+                console.error('Error al suscribir al usuario para notificaciones push:', error);
               }
-            } catch (error) {
-              console.error('Error al suscribir al usuario para notificaciones push:', error);
-            }
-          }).catch(error => console.error('Error con Service Worker ready:', error));
-        } else {
-          console.log('Permiso de notificación denegado');
-        }
-      }).catch(error => console.error('Error al pedir permiso de notificación:', error));
+            }).catch(error => console.error('Error con Service Worker ready:', error));
+          } else {
+            console.log('Permiso de notificación denegado');
+          }
+        }).catch(error => console.error('Error al pedir permiso de notificación:', error));
+      }
     })
     .catch(error => {
       console.error('Error al registrar el Service Worker:', error);
@@ -130,10 +132,11 @@ export function login(event) {
 
     // Mostrar una alerta de éxito con SweetAlert2
     Swal.fire({
-      title: 'Login exitoso!',
+      title: 'Acceso autorizado!',
       text: 'Hola ' + data.user.name, // Puedes mostrar el nombre del usuario si lo tienes
       icon: 'success',
       confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#088395'
     }).then(() => {
       // Redirigir a la página principal después de que el usuario presione "Aceptar"
       window.location.href = '/'; // Redirige a la página principal
@@ -148,6 +151,8 @@ export function login(event) {
       title: 'Error en el inicio de sesión',
       text: 'Por favor, revisa tus credenciales.',
       icon: 'error',
+      confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#088395'
     });
   });
 }
@@ -168,102 +173,105 @@ export function insertar(event) {
   };
 
   fetch('https://trash-server-8bca.onrender.com/api/users/create-user', {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-  })
-  .then(response => {
-      if (!response.ok) {
-          throw new Error('Fallo en la solicitud');
-      }
-      return response.json();
-  })
-  .then(data => {
-      console.log('Cuenta creada exitosamente:', data);
-
-      // Mostrar alerta de éxito con SweetAlert2
-      Swal.fire({
-        title: 'Cuenta creada!',
-        text: 'Tu cuenta ha sido creada exitosamente. ¡Bienvenido!',
-        icon: 'success',
-        confirmButtonText: 'Aceptar',
-      });
-  })
-  .catch(async (error) => {
-    console.log('Error en la solicitud:', error);
-
-    if (!navigator.onLine) {
-        // Guardar datos solo si el error es de conexión
-        Swal.fire({
-            title: 'Sin conexión',
-            text: 'No tienes conexión a internet. Guardaremos tus datos para intentarlo más tarde.',
-            icon: 'warning',
-            confirmButtonText: 'Aceptar',
-        });
-        guardarEnIndexedDB(name, lastname, email, password);
-
-        if ('serviceWorker' in navigator && 'SyncManager' in window) {
-            navigator.serviceWorker.ready.then(sw => {
-                return sw.sync.register('sync-usuarios');
-            }).catch(err => console.log('Error registrando el sync:', err));
-        }
-        return;
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+})
+.then(response => {
+    if (!response.ok) {
+        throw new Error('Fallo en la solicitud');
     }
+    return response.json();
+})
+.then(data => {
+    console.log('Cuenta creada exitosamente:', data);
 
-    let errorMessage = 'Error desconocido';
-    try {
-        const errorResponse = await error.response?.json();
-        errorMessage = errorResponse?.message || 'Error al procesar la solicitud';
-    } catch {
-        if (error.response?.status) {
-            errorMessage = `Error del servidor: ${error.response.status}`;
-        }
-    }
-
+    // Mostrar alerta de éxito con SweetAlert2
     Swal.fire({
-        title: 'Error al crear la cuenta',
-        text: errorMessage,
-        icon: 'error',
-        confirmButtonText: 'Aceptar',
+      title: 'Registro completado!',
+      text: 'Tu cuenta se ha registrado con éxito. ¡Bienvenido!',
+      icon: 'success',
+      confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#088395'
     });
+})
+.catch(async (error) => {
+  console.log('Error en la solicitud:', error);
+
+  if (!navigator.onLine) {
+      // Guardar datos solo si el error es de conexión
+      Swal.fire({
+          title: 'Sin conexión',
+          text: 'No tienes conexión a internet. Tus datos se guardarán y se intentará nuevamente más tarde.',
+          icon: 'warning',
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#088395'
+      });
+      guardarEnIndexedDB(name, lastname, email, password);
+
+      if ('serviceWorker' in navigator && 'SyncManager' in window) {
+          navigator.serviceWorker.ready.then(sw => {
+              return sw.sync.register('sync-usuarios');
+          }).catch(err => console.log('Error registrando el sync:', err));
+      }
+      return;
+  }
+
+  let errorMessage = 'Error desconocido';
+  try {
+      const errorResponse = await error.response?.json();
+      errorMessage = errorResponse?.message || 'Error al procesar la solicitud';
+  } catch {
+      if (error.response?.status) {
+          errorMessage = `Error del servidor: ${error.response.status}`;
+      }
+  }
+
+  Swal.fire({
+      title: 'Error al crear la cuenta',
+      text: errorMessage,
+      icon: 'error',
+      confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#088395'
   });
+});
 }
 
 function guardarEnIndexedDB(name, lastname, email, password) {
-  let db = window.indexedDB.open('database');
+let db = window.indexedDB.open('database');
 
-  db.onsuccess = event => {
-      let result = event.target.result;
-      let transaccion = result.transaction('usuarios', 'readwrite');
-      let obj = transaccion.objectStore('usuarios');
+db.onsuccess = event => {
+    let result = event.target.result;
+    let transaccion = result.transaction('usuarios', 'readwrite');
+    let obj = transaccion.objectStore('usuarios');
 
-      // Verificar si el email ya existe
-      let request = obj.get(email);
-      request.onsuccess = event => {
-          if (!event.target.result) {
-              // Si no existe, insertar
-              let resultado = obj.add({ name, lastname, email, password });
-              resultado.onsuccess = () => {
-                  console.log("Inserción realizada en IndexedDB");
-              };
-              resultado.onerror = event => {
-                  console.error("Error al insertar en IndexedDB:", event.target.error);
-              };
-          } else {
-              console.log("El correo ya está registrado en IndexedDB");
-          }
-      };
+    // Verificar si el email ya existe
+    let request = obj.get(email);
+    request.onsuccess = event => {
+        if (!event.target.result) {
+            // Si no existe, insertar
+            let resultado = obj.add({ name, lastname, email, password });
+            resultado.onsuccess = () => {
+                console.log("Inserción realizada en IndexedDB");
+            };
+            resultado.onerror = event => {
+                console.error("Error al insertar en IndexedDB:", event.target.error);
+            };
+        } else {
+            console.log("El correo ya está registrado en IndexedDB");
+        }
+    };
 
-      request.onerror = event => {
-          console.error("Error al buscar en IndexedDB:", event.target.error);
-      };
-  };
+    request.onerror = event => {
+        console.error("Error al buscar en IndexedDB:", event.target.error);
+    };
+};
 
-  db.onerror = event => {
-      console.error('Error al abrir la base de datos:', event.target.error);
-  };
+db.onerror = event => {
+    console.error('Error al abrir la base de datos:', event.target.error);
+};
 }
 
 reportWebVitals();
